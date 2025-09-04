@@ -5,7 +5,9 @@ import os
 
 ap = AIPictureProcessor()
 img = "/users/a/diff/assets/test/test.jpg"
-# ap.start_job(img)
+ap.start_job(img)
+while True:
+	sleep(1)
 
-print(os.path.splitext(img)[-1])
+#print(os.path.splitext(img)[-1])
 

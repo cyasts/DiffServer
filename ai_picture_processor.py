@@ -9,6 +9,9 @@ import os
 
 from ai_client import AIClient
 from image_utils import crop_patches_aabb_from_paths, save_image  # -> [{'part_id','prompt','bbox','patch_bytes'}, ...]
+import logging
+
+logger = logging.getLogger(__name__)
 
 # --------- 元数据 ---------
 @dataclass
@@ -67,11 +70,12 @@ class AIPictureProcessor:
         self.inflight_sem.acquire()
         try:
             task_id = self.ai.run_task(img)
+            logger.info(f"job:{job_id},task{task_id}")
             #获取img的文件格式
-            out = "/root/diffTest/assets/proto" + os.path.splitext(img)[-1]
+            out = "/root/DiffServer/assets/proto" + os.path.splitext(img)[-1]
             # out = os.path.dirname(img) + "proto" +  os.path.splitext(img)[-1]
             with self._lock:
-                self.task_map[task_id] = TaskMeta(task_id=task_id, output=out)
+                self.task_map[task_id] = TaskMeta(task_id=task_id, output=out, job_id=job_id,feather=False)
             return {"job_id": job_id, "task_id": task_id}
         except Exception:
             # 创建失败必须归还
@@ -104,10 +108,11 @@ class AIPictureProcessor:
             self.inflight_sem.acquire()
             try:
                 task = self.ai.run_batch_task(p["patch_bytes"], p.get("prompt", ""))
+                logger.info(f"job:{job_id},task{task_id}")
                 # out = os.path.dirname(img) + "region" +  p["part_id"] + ".png"
-                out = "/root/diffTest/assets/region" + p["part_id"] + os.path.splitext(img)[-1]
+                out = "/root/DiffServer/assets/region" + p["part_id"] + os.path.splitext(img)[-1]
                 with self._lock:
-                    self.task_map[task] = TaskMeta(task_id=task, output=out, part_id=p["part_id"], feather=True)
+                    self.task_map[task] = TaskMeta(task_id=task, output=out, job_id=job_id, feather=True)
                 parts_meta.append({
                     "part_id": p["part_id"],
                     "task_id": task,

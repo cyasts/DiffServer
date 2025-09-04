@@ -18,7 +18,7 @@ class AIClient:
         self.api_key = "94fb0c59bdac4af79977df8e0fee71e1"
         self.workflow_single = "1958698927740579842"
         self.workflow_batch = "1963139722744926209"
-        self.webhook_url = "http://47.94.138.54:10080/rh_callback"  # 你的回调地址
+        self.webhook_url = "https://webhook.site/ba1c7400-89ee-4b2e-8821-7b4b63e5af49"
 
     # ------------- 上传文件（路径）-------------
     def upload_image_path(self, image_path: str) -> str:
