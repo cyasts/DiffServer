@@ -35,6 +35,7 @@ def testbatch():
 
 @app.post("/rh_callback")  # 裁图工作流的回调
 async def rh_callback(request: Request):
+    print("[callback] received")
     payload = await request.json()
     aipp.on_callback(payload)
 

@@ -66,7 +66,7 @@ class AIPictureProcessor:
         # 严格限流：每次真正调用AI前 acquire
         self.inflight_sem.acquire()
         try:
-            task_id = self.ai.create_full_task(img)
+            task_id = self.ai.run_task(img)
             #获取img的文件格式
             out = os.path.dirname(img) + "proto" +  os.path.splitext(img)[-1]
             with self._lock:
@@ -102,7 +102,7 @@ class AIPictureProcessor:
         for p in patches:
             self.inflight_sem.acquire()
             try:
-                task = self.ai.create_patch_task(p["patch_bytes"], p.get("prompt", ""))
+                task = self.ai.run_batch_task(p["patch_bytes"], p.get("prompt", ""))
                 out = os.path.dirname(img) + "region" +  p["part_id"] + ".png"
                 with self._lock:
                     self.task_map[task] = TaskMeta(task_id=task, output=out, part_id=p["part_id"], feather=True)
