@@ -7,20 +7,6 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, List, Tuple
 import os
 
-import logging
-import time
-
-# 配置根 logger
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
-
-# 创建应用特定的 logger
-logger = logging.getLogger("myapp")
-
-
 from ai_client import AIClient
 from image_utils import crop_patches_aabb_from_paths, save_image  # -> [{'part_id','prompt','bbox','patch_bytes'}, ...]
 
@@ -81,9 +67,9 @@ class AIPictureProcessor:
         self.inflight_sem.acquire()
         try:
             task_id = self.ai.run_task(img)
-            logg(f"[submit] task_id={task_id}")
             #获取img的文件格式
-            out = os.path.dirname(img) + "proto" +  os.path.splitext(img)[-1]
+            out = "/root/diffTest/assets/proto" + os.path.splitext(img)[-1]
+            # out = os.path.dirname(img) + "proto" +  os.path.splitext(img)[-1]
             with self._lock:
                 self.task_map[task_id] = TaskMeta(task_id=task_id, output=out)
             return {"job_id": job_id, "task_id": task_id}
@@ -118,8 +104,8 @@ class AIPictureProcessor:
             self.inflight_sem.acquire()
             try:
                 task = self.ai.run_batch_task(p["patch_bytes"], p.get("prompt", ""))
-                logger.info(f"[submit] part_id={p['part_id']} task_id={task} ")
-                out = os.path.dirname(img) + "region" +  p["part_id"] + ".png"
+                # out = os.path.dirname(img) + "region" +  p["part_id"] + ".png"
+                out = "/root/diffTest/assets/region" + p["part_id"] + os.path.splitext(img)[-1]
                 with self._lock:
                     self.task_map[task] = TaskMeta(task_id=task, output=out, part_id=p["part_id"], feather=True)
                 parts_meta.append({
@@ -141,7 +127,6 @@ class AIPictureProcessor:
           - 聚合进度，全部完成后触发 on_job_complete
         """
         task_id = str(payload.get("taskId") or "")
-        logger.info(f"[callback] task_id={task_id}")
 
         if task_id:
             with self._lock:
@@ -176,7 +161,7 @@ class AIPictureProcessor:
         try:
             piece = self.ai.download_from_callback(url)
         except Exception as e:
-            logger.error(f"[callback_io] error: {e}")
+            print(f"[callback_io] error: {e}")
 
         save_image(piece, out, feather)
 
@@ -205,7 +190,7 @@ class AIPictureProcessor:
                 try:
                     self._on_job_complete(job_id, t2)
                 except Exception as e:
-                    logger.error(f"[on_job_complete] error: {e}")
+                    print(f"[on_job_complete] error: {e}")
 
     # --------- 关闭线程池 ---------
     def shutdown(self, wait: bool = True):
