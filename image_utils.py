@@ -4,6 +4,7 @@ import json
 from typing import List, Dict, Any, Literal
 import numpy as np
 import cv2
+import logging
 
 CoordOrigin = Literal["top-left", "bottom-left"]
 
