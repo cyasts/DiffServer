@@ -1,0 +1,10 @@
+# Web & API
+fastapi>=0.110
+uvicorn[standard]>=0.23
+requests>=2.31
+pydantic>=2.4
+python-multipart>=0.0.9  # 处理表单/文件上传所需
+
+# Image & Numeric
+opencv-python-headless>=4.8
+numpy>=1.24
