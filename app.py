@@ -33,13 +33,13 @@ def health():
 @app.get("/test")
 def test():
     logger.info("[test] start")
-    aipp.start_job("./assets/test/test.png")
+    aipp.start_job("./assets/test/test.jpg")
     return {"ok": True, "msg": "test successful"}
 
 @app.get("/testbatch")
 def testbatch():
     logger.info("[testbatch] start")
-    aipp.start_batch_job("./assets/test/test_batch.png", "./assets/test/test.json")
+    aipp.start_batch_job("./assets/test/test_batch.jpg", "./assets/test/test.json")
     return {"ok": True, "msg": "testbatch successful"}
 
 @app.post("/rh_callback")  # 裁图工作流的回调
