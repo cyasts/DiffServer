@@ -125,6 +125,7 @@ class AIPictureProcessor:
           - 聚合进度，全部完成后触发 on_job_complete
         """
         task_id = str(payload.get("taskId") or "")
+        print(f"[callback] task_id={task_id}")
 
         if task_id:
             with self._lock:
