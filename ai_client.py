@@ -18,12 +18,15 @@ class AIClient:
         self.api_key = "94fb0c59bdac4af79977df8e0fee71e1"
         self.workflow_single = "1958698927740579842"
         self.workflow_batch = "1963139722744926209"
-        self.webhook_url = "https://webhook.site/ba1c7400-89ee-4b2e-8821-7b4b63e5af49"
+        self.webhook_url = "http://47.109.182.115:8081/rhcallback"
+        self.timeout = 600
 
     # ------------- 上传文件（路径）-------------
     def upload_image_path(self, image_path: str) -> str:
+        print(image_path)
         if not os.path.isfile(image_path):
-            raise FileNotFoundError(image_path)
+            print("file not exist")
+            raise RuntimeError(f"file ot exist") 
 
         r = requests.post(
             f"{self.api_base}/task/openapi/upload",
@@ -58,6 +61,8 @@ class AIClient:
 
         response = requests.request("POST", f"{self.api_base}/task/openapi/create", headers=headers, json=payload)
         response.raise_for_status()
+        print(response)
+        print("\n\ncreated")
         return response.json()["data"]["taskId"]
 
     # ------------- 对外：整图 -------------
@@ -66,7 +71,8 @@ class AIClient:
         node_info_list = [
             {"nodeId": 200, "fieldName": "image", "fieldValue": file_name}
         ]
-        return self._create_task(self.workflow_single, node_info)
+        print("uploaded image")
+        return self._create_task(self.workflow_single, node_info_list)
 
     # ------------- 对外：单 patch（与整图同构）-------------
     def run_batch_task(self, image_bytes: bytes, prompt: str) -> str:
@@ -75,10 +81,11 @@ class AIClient:
             {"nodeId": "18",  "fieldName": "self.prompt",  "fieldValue": prompt},
             {"nodeId": "19", "fieldName": "image", "fieldValue": file_name},
         ]
-        return self._create_task(self.workflow_batch, node_info)
+        return self._create_task(self.workflow_batch, node_info_list)
 
     # ------------- 回调下载（保存到目录）-------------
-    def download_from_callback(self, url: str):
+    def download_from_callback(self, url: str, out: str):
         r = requests.get(url, timeout=self.timeout)
         r.raise_for_status()
-        return r.content
+        with open(out, "wb") as f:
+            f.write(r.content)

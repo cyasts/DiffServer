@@ -81,7 +81,7 @@ def crop_patches_aabb_from_paths(image_path: str, config_path: str,
 
     return out
 
-def feather_image(  img: np.ndarray,
+def feather_image_array(img: np.ndarray,
                     feather: int = 8,
                     shrink: int = 0,
                     gamma: float = 1.0) -> np.ndarray:
@@ -146,3 +146,10 @@ def save_image(path: str, img: np.ndarray, feature: bool) -> None:
     if not cv2.imwrite(path, img):
         raise RuntimeError(f"failed to save image: {path}")
 
+def feather_image(img: str, feather: bool):
+    if feather is False:
+        return
+    array = cv2.imread(img, cv2.IMREAD_UNCHANGED)
+
+    out_img = feather_iamge_array(array)
+    ok = cv2.imwrite(img, out_img)

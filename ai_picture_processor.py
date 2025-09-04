@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, Future
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, List, Tuple
 import os
+import json
 
 from ai_client import AIClient
 from image_utils import crop_patches_aabb_from_paths, save_image  # -> [{'part_id','prompt','bbox','patch_bytes'}, ...]
@@ -69,8 +70,10 @@ class AIPictureProcessor:
         # 严格限流：每次真正调用AI前 acquire
         self.inflight_sem.acquire()
         try:
+            print("create_task")
             task_id = self.ai.run_task(img)
             logger.info(f"job:{job_id},task{task_id}")
+            print(f"job:{job_id},task{task_id}")
             #获取img的文件格式
             out = "/root/DiffServer/assets/proto" + os.path.splitext(img)[-1]
             # out = os.path.dirname(img) + "proto" +  os.path.splitext(img)[-1]
@@ -109,6 +112,7 @@ class AIPictureProcessor:
             try:
                 task = self.ai.run_batch_task(p["patch_bytes"], p.get("prompt", ""))
                 logger.info(f"job:{job_id},task{task_id}")
+                print(f"job:{job_id},task{task_id}")
                 # out = os.path.dirname(img) + "region" +  p["part_id"] + ".png"
                 out = "/root/DiffServer/assets/region" + p["part_id"] + os.path.splitext(img)[-1]
                 with self._lock:
@@ -142,7 +146,7 @@ class AIPictureProcessor:
                     except Exception: pass
 
         # 下载/落盘放回回调线程池，避免阻塞 HTTP 回调线程
-        self.callback_exec.submit(self._run_callback, payload, meta)
+        self.callback_pool.submit(self._run_callback, payload, meta)
 
     def _run_callback(self, payload: Dict[str, Any], meta: Optional[TaskMeta]):
         if not meta:
@@ -151,24 +155,23 @@ class AIPictureProcessor:
         job_id = meta.job_id
         task_id = meta.task_id
         out = meta.output
+        logger.info(f"save in :{out}")
         feather = meta.feather
         with self._lock:
             self.task_map.pop(task_id, None)
 
         # 1) 获取图片内容
-        ed = payload.get("eventData")
-        if not ed or ed is None:
-            return
-        if ed.get("code") != 0:
-            return
-        url = ed.get("data").get("fileUrl")
+        ed = json.loads(payload.get("eventData", {}))
+        data_list = ed.get("data", [])
+        url = data_list[0].get("fileUrl")
+        logger.info(f"url is {url}")
 
         try:
-            piece = self.ai.download_from_callback(url)
+            piece = self.ai.download_from_callback(url, out)
         except Exception as e:
             print(f"[callback_io] error: {e}")
 
-        save_image(piece, out, feather)
+        feather(out, feather)
 
         # 2) 聚合（需要 job_id 才能统计）
         with self._lock:

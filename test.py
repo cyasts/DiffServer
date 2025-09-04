@@ -4,7 +4,7 @@ from time import sleep
 import os
 
 ap = AIPictureProcessor()
-img = "/users/a/diff/assets/test/test.jpg"
+img = "/root/DiffServer/assets/test/test.jpg"
 ap.start_job(img)
 while True:
 	sleep(1)
